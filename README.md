@@ -20,4 +20,4 @@
 ## DIRECT DEPLOY TO HEROKU
 
 
-[![Deploy](https://github.com/erenmetesar/NiceGrill_Heroku/tree/master)
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://github.com/erenmetesar/NiceGrill_Heroku)
