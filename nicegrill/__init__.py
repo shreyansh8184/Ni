@@ -23,11 +23,7 @@ import os
 
 
 if not API_ID or not API_HASH:
-    API_ID = int(input("Enter your API ID:"))
-    API_HASH = input("Enter your API HASH:")
-    file = open("config.py", "a+")
-    file.write(f"API_ID={API_ID}\nAPI_HASH='{API_HASH}'")
-    file.close()
+    print("Type your informations in config.py")
 
 if not SESSION:
     print("Run generate_session.py to create a string session first")
