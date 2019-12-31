@@ -73,7 +73,7 @@ class Quote:
                     if "MessageEntityCode" in str(reply.entities):
                         width = mono.getsize(line[:43])[0] + 30
                     else:
-                        width = fallback.getsize(line[:43])[0] - 200
+                        width = fallback.getsize(line[:43])[0]
                 next
             else:
                 text.append(line + "\n")
@@ -106,7 +106,6 @@ class Quote:
             width = namewidth
         width += titlewidth + 30 if titlewidth > width - namewidth else -(titlewidth - 30)
         height = len(text) * 40
-
 
         # Profile Photo BG
         pfpbg = Image.new("RGBA", (125, 600), (0, 0, 0, 0))
