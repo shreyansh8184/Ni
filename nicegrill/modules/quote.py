@@ -69,19 +69,19 @@ class Quote:
             if length > 43:
                 text += textwrap.wrap(line, 43)
                 maxlength = 43
-                if width < font2.getsize(line[:43])[0] + 60:
+                if width < fallback.getsize(line[:43])[0]:
                     if "MessageEntityCode" in str(reply.entities):
                         width = mono.getsize(line[:43])[0] + 30
                     else:
-                        width = font2.getsize(line[:43])[0] + 30
+                        width = fallback.getsize(line[:43])[0] - 200
                 next
             else:
                 text.append(line + "\n")
-                if width < font2.getsize(line[:43])[0] + 60:
+                if width < fallback.getsize(line)[0]:
                     if "MessageEntityCode" in str(reply.entities):
-                        width = mono.getsize(line[:43])[0] + 30
+                        width = mono.getsize(line)[0] + 30
                     else:
-                        width = font2.getsize(line[:43])[0] + 30
+                        width = fallback.getsize(line)[0]
                 if maxlength < length:
                     maxlength = length
 
@@ -103,10 +103,8 @@ class Quote:
         namewidth = fallback.getsize(tot)[0] + 10
 
         if namewidth > width:
-            width = namewidth + 30
-        width += titlewidth + 20 if namewidth > width else - titlewidth
-        if width < 270:
-            width = 270 + titlewidth - 30
+            width = namewidth
+        width += titlewidth + 30 if titlewidth > width - namewidth else -(titlewidth - 30)
         height = len(text) * 40
 
 
@@ -114,7 +112,7 @@ class Quote:
         pfpbg = Image.new("RGBA", (125, 600), (0, 0, 0, 0))
 
         # Draw Template
-        top, middle, bottom = await Quote.drawer(width + 50, height)
+        top, middle, bottom = await Quote.drawer(width, height)
         # Profile Photo Check and Fetch
         yes = False
         color = random.choice(COLORS)
@@ -179,7 +177,7 @@ class Quote:
                 replied.text = "Voice Message"
             elif replied.document:
                 replied.text = "Document"
-            await Quote.replied_user(draw, reptot, replied.message.replace("\n", " "), maxlength)
+            await Quote.replied_user(draw, reptot, replied.message.replace("\n", " "), maxlength + len(title), len(title))
             y = 200
         elif reply.sticker:
             sticker = await reply.download_media()
@@ -369,13 +367,13 @@ class Quote:
         draw.ellipse((0, 0, 40, 40), fill=255)
         return emoji, mask
 
-    async def replied_user(draw, tot, text, maxlength):
+    async def replied_user(draw, tot, text, maxlength, title):
         namefont = ImageFont.truetype(".tmp/Roboto-Medium.ttf", 38)
         namefallback= ImageFont.truetype(".tmp/Quivira.otf", 38)
         textfont = ImageFont.truetype(".tmp/Roboto-Regular.ttf", 32)
         textfallback = ImageFont.truetype(".tmp/Roboto-Medium.ttf", 38)
         maxlength = maxlength + 7 if maxlength < 10 else maxlength
-        text = text[:maxlength] + ".." if len(text) > maxlength else text
+        text = text[:maxlength - 2] + ".." if len(text) > maxlength else text
         draw.line((165, 90, 165, 170), width=5, fill="white")
         space = 0
         for letter in tot:
