@@ -14,7 +14,7 @@
 #    along with NiceGrill.  If not, see <https://www.gnu.org/licenses/>.
 
 from PIL import Image, ImageDraw, ImageFont, ImageOps
-from telethon.tl import types
+from telethon.tl import types, functions
 from fontTools.ttLib import TTFont 
 from fontTools.unicode import Unicode 
 import emoji
@@ -71,20 +71,30 @@ class Quote:
                 maxlength = 43
                 if width < font2.getsize(line[:43])[0] + 60:
                     if "MessageEntityCode" in str(reply.entities):
-                        width = mono.getsize(line[:43])[0] + 100
+                        width = mono.getsize(line[:43])[0] + 30
                     else:
-                        width = font2.getsize(line[:43])[0] + 100
+                        width = font2.getsize(line[:43])[0] + 30
                 next
             else:
                 text.append(line + "\n")
                 if width < font2.getsize(line[:43])[0] + 60:
                     if "MessageEntityCode" in str(reply.entities):
-                        width = mono.getsize(line[:43])[0] + 100
+                        width = mono.getsize(line[:43])[0] + 30
                     else:
-                        width = font2.getsize(line[:43])[0] + 100
+                        width = font2.getsize(line[:43])[0] + 30
                 if maxlength < length:
                     maxlength = length
 
+        title = ""
+        try:
+            details = await client(functions.channels.GetParticipantRequest(reply.chat_id, user.id))
+            if isinstance(details.participant, types.ChannelParticipantCreator):
+                title = details.participant.rank if details.participant.rank else "Creator"
+            elif isinstance(details.participant, types.ChannelParticipantAdmin):
+                title = details.participant.rank if details.participant.rank else "Admin"
+        except TypeError:
+            pass
+        titlewidth = font2.getsize(title)[0]
 
         # Get user name
         lname = "" if not user.last_name else user.last_name
@@ -94,15 +104,17 @@ class Quote:
 
         if namewidth > width:
             width = namewidth + 30
-        if width < 200:
-            width = 200
+        width += titlewidth + 20 if namewidth > width else - titlewidth
+        if width < 270:
+            width = 270 + titlewidth - 30
         height = len(text) * 40
+
 
         # Profile Photo BG
         pfpbg = Image.new("RGBA", (125, 600), (0, 0, 0, 0))
 
         # Draw Template
-        top, middle, bottom = await Quote.drawer(width, height)
+        top, middle, bottom = await Quote.drawer(width + 50, height)
         # Profile Photo Check and Fetch
         yes = False
         color = random.choice(COLORS)
@@ -127,7 +139,7 @@ class Quote:
 
         # Creating a big canvas to gather all the elements
         canvassize = (
-            middle.width + 20 + pfpbg.width, top.height + middle.height + bottom.height)
+            middle.width + pfpbg.width, top.height + middle.height + bottom.height)
         canvas = Image.new('RGBA', canvassize)
         draw = ImageDraw.Draw(canvas)
 
@@ -150,8 +162,8 @@ class Quote:
                 canvas.paste(stimg, (pfpbg.width + 10, 140))
                 os.remove(sticker)
                 return True, canvas
-            canvas = canvas.resize((canvas.width + replywidth, canvas.height + 120))
-            top, middle, bottom = await Quote.drawer(width + replywidth, height + 105)
+            canvas = canvas.resize((canvas.width + 60, canvas.height + 120))
+            top, middle, bottom = await Quote.drawer(middle.width + 60, height + 105)
             canvas.paste(pfpbg, (0, 0))
             canvas.paste(top, (pfpbg.width, 0))
             canvas.paste(middle, (pfpbg.width, top.height))
@@ -189,8 +201,8 @@ class Quote:
             else:
                 docsize = str(round(reply.document.size / 1024**3, 2)) + " GB "
             docbglen = font.getsize(docsize)[0] if font.getsize(docsize)[0] > font.getsize(docname)[0] else font.getsize(docname)[0]
-            canvas = canvas.resize((300 + middle.width + docbglen, 180 + height))
-            top, middle, bottom = await Quote.drawer(160 + middle.width + docbglen, height + 30)
+            canvas = canvas.resize((pfpbg.width + width + docbglen, 160 + height))
+            top, middle, bottom = await Quote.drawer(width + docbglen, height + 30)
             canvas.paste(pfpbg, (0, 0))
             canvas.paste(top, (pfpbg.width, 0))
             canvas.paste(middle, (pfpbg.width, top.height))
@@ -219,6 +231,9 @@ class Quote:
                 else:
                     draw.text((space, 20), letter, font=font, fill=color)
                     space += font.getsize(letter)[0]
+
+        if title:
+            draw.text((canvas.width - titlewidth - 20, 25), title, font=font2, fill="#898989")
 
         # Writing all separating emojis and regular texts
         x = pfpbg.width + 30
@@ -359,7 +374,7 @@ class Quote:
         namefallback= ImageFont.truetype(".tmp/Quivira.otf", 38)
         textfont = ImageFont.truetype(".tmp/Roboto-Regular.ttf", 32)
         textfallback = ImageFont.truetype(".tmp/Roboto-Medium.ttf", 38)
-        maxlength = maxlength + 10 if maxlength < 10 else maxlength
+        maxlength = maxlength + 7 if maxlength < 10 else maxlength
         text = text[:maxlength] + ".." if len(text) > maxlength else text
         draw.line((165, 90, 165, 170), width=5, fill="white")
         space = 0
@@ -392,5 +407,5 @@ class Quote:
         if not res:
             return
         canvas.save('.tmp/sticker.webp')
-        await message.client.send_file(message.chat_id, ".tmp/sticker.webp")
+        await message.respond(file=".tmp/sticker.webp")
         os.remove('.tmp/sticker.webp')
