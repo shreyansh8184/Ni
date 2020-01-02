@@ -17,8 +17,9 @@ from nicegrill.modules import _init
 import html
 
 def get_arg(message):
-    msg = message.message if isinstance(message.message, str) else message.message.message
-    split = str(msg)[1:].replace("\n", " \n").split(" ")
+    msg = message.raw_text
+    msg = msg.replace(" ", "", 1) if msg[1] == " " else msg
+    split = msg[1:].replace("\n", " \n").split(" ")
     if " ".join(split[1:]).strip() == "":
         return ""
     return " ".join(split[1:])
