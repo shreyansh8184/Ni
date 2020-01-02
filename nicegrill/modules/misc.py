@@ -34,7 +34,8 @@ class Misc:
         if await settings.check_restart():
             await settings.delete("Restart")
         await settings.set_restart(msg.chat_id, msg.id)
-        os.execl(sys.executable, sys.executable, *sys.argv)
+        os.system("cd ../")
+        os.execl(sys.executable, sys.executable, "-mnicegrill")
 
     async def shutdownxxx(message):
         await message.edit("<b>Shutting down...</b>")
