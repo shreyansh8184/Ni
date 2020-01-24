@@ -34,7 +34,7 @@ class Quote:
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
     
-    @borg.on(admin_cmd("q ?(.*)"))
+    @borg.on(admin_cmd("kk ?(.*)"))
     async def process(msg, user, client, reply, replied=None):
         if not os.path.isdir(".tmp"):
             os.mkdir(".tmp", 0o755)
